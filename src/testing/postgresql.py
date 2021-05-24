@@ -42,6 +42,7 @@ class Postgresql(Database):
                             postgres_args='-h 127.0.0.1 -F -c logging_collector=off',
                             pid=None,
                             port=None,
+                            preexec_fn=None,
                             copy_data_from=None)
     subdirectories = ['data', 'tmp']
 
@@ -76,12 +77,13 @@ class Postgresql(Database):
         return os.path.join(self.base_dir, 'data')
 
     def initialize_database(self):
+        preexec_fn = self.settings['preexec_fn']
         if not os.path.exists(os.path.join(self.base_dir, 'data', 'PG_VERSION')):
             args = ([self.initdb, '-D', os.path.join(self.base_dir, 'data'), '--lc-messages=C'] +
                     self.settings['initdb_args'].split())
 
             try:
-                p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, preexec_fn=preexec_fn)
                 output, err = p.communicate()
                 if p.returncode != 0:
                     raise RuntimeError("initdb failed: %r" % err)
